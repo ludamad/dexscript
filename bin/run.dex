@@ -1,0 +1,8 @@
+#Brainfuck interpreter written in DexScript running hello world
+import bf_interpreter as bf
+
+hello_world = "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
+
+func main(args):
+	program = bf.parse_program(hello_world)
+	program.exec()

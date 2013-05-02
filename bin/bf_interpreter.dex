@@ -1,0 +1,80 @@
+#Brainfuck interpreter written in DexScript
+
+type BFState:
+	func init( memsize = 1000):
+		@.memory = list(range(memsize))
+		@.pointer = 0
+		for i in range( @.memory.len() ):
+			@.memory[i] = 0
+
+type BFProgram:
+	func init( state, code):
+		@.state = state
+		@.body = code
+	func exec():
+		for c in @.body:
+			c.exec(in @.state)
+			
+type BFLoop:
+	func init(code):
+		@.body = code
+	func exec( state):
+		i = 1
+		while state.memory[state.pointer] != 0:
+			for c in @.body:
+				c.exec(in state)
+			i += 1
+		return state
+			
+type BFShiftUp:
+	func exec( state):
+		state.pointer += 1
+		return state
+		
+type BFShiftDown:
+	func exec( state):
+		state.pointer -= 1
+		return state
+		
+type BFIncrement:
+	func exec( state):
+		state.memory[state.pointer] += 1
+		return state
+		
+type BFDecrement:
+	func exec( state):
+		state.memory[state.pointer] -= 1
+		return state
+		
+type BFInput:
+	func exec( state):
+		state.memory[state.pointer] = to_charcode(read(1))
+		return state
+		
+type BFOutput:
+	func exec( state):
+		print( from_charcode(state.memory[state.pointer]) )
+		return state
+
+func parse_program(p):
+	imap = {">" => BFShiftUp(), "<" => BFShiftDown(), "+" => BFIncrement(), "-" => BFDecrement(), "." => BFOutput(), "," => BFInput()}
+	loops = [ [] ]
+	for i in range(p.len()):
+		ind = loops.len()-1
+		c = p.substr(i, i+1)
+		if c == "]":
+			code = loops[ind]
+			loops.=pop()
+			loops[ind-1].=push( BFLoop(code) )
+		elseif c == "[":
+			loops.=push( [] )
+		else:
+			instruct = imap[c]
+			loops[ind].=push(instruct)	
+	return BFProgram( BFState(), loops[0])
+
+hello_world = "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
+	
+func main(args):
+	program = parse_program(hello_world)
+	program.exec()
